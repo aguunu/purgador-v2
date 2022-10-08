@@ -1,7 +1,7 @@
 # discord bot using hikari and lightbulb
 To run the bot use the following command in your terminal.
 ```bash
-$ python -m mybot
+$ python -m purgador
 ```
 
 To create the database you must run the following command in your terminal.
