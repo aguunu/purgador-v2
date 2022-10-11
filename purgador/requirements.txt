@@ -1,5 +1,5 @@
 hikari
 hikari-lightbulb
 uvloop
-pandas
-bs4
+python-dotenv
+lavaplayer
