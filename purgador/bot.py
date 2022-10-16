@@ -1,14 +1,20 @@
 import os
 import hikari
 import lightbulb
+from . import exceptions
 
 bot = lightbulb.BotApp(
-    token=os.getenv("TOKEN"),
+    token=os.environ["TOKEN"],
     prefix=".",
-    default_enabled_guilds=int(os.getenv("DEFAULT_GUILD_ID")),
     help_slash_command=True,
     intents=hikari.Intents.ALL_UNPRIVILEGED,
 )
+
+default_guilds = os.environ.get("DEFAULT_ENABLED_GUILDS")
+if default_guilds:
+    default_guilds = map(int, default_guilds.split(","))
+    bot.default_enabled_guilds = tuple(default_guilds)
+
 
 extensions_path = os.path.join(os.path.dirname(__file__), "extensions")
 bot.load_extensions_from(extensions_path)
@@ -21,7 +27,7 @@ async def on_starting(event: hikari.StartingEvent) -> None:
 
 @bot.listen(hikari.StartedEvent)
 async def on_started(event: hikari.StartedEvent) -> None:
-    print(f"Server online!")
+    print("Server online!")
 
 
 @bot.listen(lightbulb.CommandErrorEvent)
@@ -41,8 +47,10 @@ async def on_error(event: lightbulb.CommandErrorEvent) -> None:
         await event.context.respond(
             f"This command is on cooldown. Retry in `{exception.retry_after:.2f}` seconds."
         )
-    elif ...:
-        ...
+    elif isinstance(exception, lightbulb.OnlyInGuild):
+        await event.context.respond("This command can be used only in guilds.")
+    elif isinstance(exception, exceptions.AuthorNotInVoiceChannel):
+        await event.context.respond("You are not in a voice channel.")
     else:
         raise exception
 
