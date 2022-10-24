@@ -17,12 +17,6 @@ lavalink = lavaplayer.LavalinkClient(
 @lavalink.listen(lavaplayer.TrackStartEvent)
 async def track_start_event(event: lavaplayer.TrackStartEvent) -> None:
     logging.info(f"start track: {event.track.title}")
-    await plugin.bot.update_presence(
-        status=hikari.Status.DO_NOT_DISTURB,
-        activity=hikari.Activity(
-            name=event.track.title, type=hikari.ActivityType.LISTENING
-        ),
-    )
 
 
 @lavalink.listen(lavaplayer.TrackEndEvent)
