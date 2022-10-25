@@ -7,6 +7,9 @@ import asyncio
 from .. import checks
 
 
+plugin = lightbulb.Plugin("music_plugin")
+
+
 lavalink = lavaplayer.LavalinkClient(
     host=os.environ["LAVALINK_SERVER"],
     port=os.environ["LAVALINK_PORT"],
@@ -22,14 +25,14 @@ async def track_start_event(event: lavaplayer.TrackStartEvent) -> None:
 @lavalink.listen(lavaplayer.TrackEndEvent)
 async def track_end_event(event: lavaplayer.TrackEndEvent) -> None:
     logging.info(f"track end: {event.track.title}")
-
+    node = await lavalink.get_guild_node(event.guild_id)
+    if len(node.queue) == 0:
+        await plugin.bot.update_voice_state(node.guild_id, None)
+        
 
 @lavalink.listen(lavaplayer.WebSocketClosedEvent)
 async def web_socket_closed_event(event: lavaplayer.WebSocketClosedEvent) -> None:
     logging.error(f"error with websocket {event.reason}")
-
-
-plugin = lightbulb.Plugin("music_plugin")
 
 
 @plugin.listener(hikari.StartedEvent)
@@ -68,7 +71,7 @@ async def _join(ctx: lightbulb.context.Context) -> None:
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def join_command(ctx: lightbulb.context.Context) -> None:
     await _join(ctx)
-    await ctx.respond("done join vc")
+    await ctx.respond("BUENASS 😎")
 
 
 @plugin.command()
@@ -80,14 +83,16 @@ async def play_command(ctx: lightbulb.context.Context) -> None:
     query = ctx.options.query
     result = await lavalink.auto_search_tracks(query)
     if not result:
-        await ctx.respond("not found result for your query")
+        await ctx.respond("Pa man no encontré nada :(")
         return
     elif isinstance(result, lavaplayer.TrackLoadFailed):
-        await ctx.respond(f"track load failed\n```{result.message}```")
+        await ctx.respond(f"ABORTEN SE ROMPIO TODO\n```{result.message}```")
         return
     elif isinstance(result, lavaplayer.PlayList):
         await lavalink.add_to_queue(ctx.guild_id, result.tracks, ctx.author.id)
-        await ctx.respond(f"added {len(result.tracks)} tracks to queue")
+        await ctx.respond(
+            f"CHE CAPO ACABO DE AÑADIR {len(result.tracks)} ROLAS A LA LISTA"
+        )
         return
 
     node = await lavalink.get_guild_node(ctx.guild_id)
@@ -99,66 +104,74 @@ async def play_command(ctx: lightbulb.context.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="stop", description="Stop command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def stop_command(ctx: lightbulb.context.Context) -> None:
     await lavalink.stop(ctx.guild_id)
-    await ctx.respond("done music stopped")
+    await ctx.respond("BUENO PARA YA ME CALLO")
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="skip", description="Skip command", aliases=["s"])
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def skip_command(ctx: lightbulb.context.Context) -> None:
     await lavalink.skip(ctx.guild_id)
-    await ctx.respond("done music skipped")
+    await ctx.respond("SKIPEAMOS NAZI 😎👊")
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="pause", description="Pause command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def pause_command(ctx: lightbulb.context.Context) -> None:
     await lavalink.pause(ctx.guild_id, True)
-    await ctx.respond("done music paused")
+    await ctx.respond("Ponemos pausa chavalesss")
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="resume", description="Resume command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def resume_command(ctx: lightbulb.context.Context) -> None:
     await lavalink.pause(ctx.guild_id, False)
-    await ctx.respond("done music resumed")
+    await ctx.respond("Sacamos la pausa chavaless")
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.option(name="position", description="Position to seek", required=True)
 @lightbulb.command(name="seek", description="Seek command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def seek_command(ctx: lightbulb.context.Context) -> None:
     position = ctx.options.position
     await lavalink.seek(ctx.guild_id, position)
-    await ctx.respond(f"done seek to {position}")
+    await ctx.respond(f"Adelantamos a la mejor parte 👉 ``{position}``")
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.option(name="vol", description="Volume to set", required=True)
 @lightbulb.command(name="volume", description="Volume command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def volume_command(ctx: lightbulb.context.Context) -> None:
     volume = ctx.options.vol
     await lavalink.volume(ctx.guild_id, volume)
-    await ctx.respond(f"done set volume to {volume}%")
+    await ctx.respond(f"Cambiamos el volumen a ``{volume}%`` chavaless")
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="destroy", description="Destroy command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def destroy_command(ctx: lightbulb.context.Context) -> None:
     await lavalink.destroy(ctx.guild_id)
-    await ctx.respond("done destroy the bot")
+    await ctx.respond("Se reinició todo")
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="queue", description="Queue command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def queue_command(ctx: lightbulb.context.Context) -> None:
@@ -172,17 +185,19 @@ async def queue_command(ctx: lightbulb.context.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="np", description="Now playing command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def np_command(ctx: lightbulb.context.Context) -> None:
     node = await lavalink.get_guild_node(ctx.guild_id)
     if not node or not node.queue:
-        await ctx.respond("nothing playing")
+        await ctx.respond("Sos tonto o k")
         return
     await ctx.respond(f"[{node.queue[0].title}]({node.queue[0].uri})")
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="repeat", description="Repeat command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def repeat_command(ctx: lightbulb.context.Context) -> None:
@@ -190,25 +205,27 @@ async def repeat_command(ctx: lightbulb.context.Context) -> None:
     stats = False if node.repeat else True
     await lavalink.repeat(ctx.guild_id, stats)
     if stats:
-        await ctx.respond("done repeat the music")
+        await ctx.respond("Empezamos a repetir chavaless")
         return
-    await ctx.respond("done stop repeat the music")
+    await ctx.respond("Ya no repito más :(")
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="shuffle", description="Shuffle command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def shuffle_command(ctx: lightbulb.context.Context) -> None:
     await lavalink.shuffle(ctx.guild_id)
-    await ctx.respond("done shuffle the music")
+    await ctx.respond("Listorti 🤙")
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="leave", description="Leave command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def leave_command(ctx: lightbulb.context.Context) -> None:
     await ctx.bot.update_voice_state(ctx.guild_id, None)
-    await ctx.respond("done leave the voice channel")
+    await ctx.respond("HASTA LA PROXIMAA")
 
 
 def load(bot: lightbulb.BotApp) -> None:

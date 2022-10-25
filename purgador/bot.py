@@ -5,8 +5,8 @@ from . import exceptions
 
 bot = lightbulb.BotApp(
     token=os.environ["TOKEN"],
-    prefix=".",
-    help_slash_command=True,
+    # prefix=".",
+    help_slash_command=False,
     intents=hikari.Intents.ALL_UNPRIVILEGED,
 )
 
@@ -50,7 +50,7 @@ async def on_error(event: lightbulb.CommandErrorEvent) -> None:
     elif isinstance(exception, lightbulb.OnlyInGuild):
         await event.context.respond("This command can be used only in guilds.")
     elif isinstance(exception, exceptions.AuthorNotInVoiceChannel):
-        await event.context.respond("You are not in a voice channel.")
+        await event.context.respond("Entra a un canal de voz pib@.")
     else:
         raise exception
 
@@ -61,4 +61,9 @@ def run() -> None:
 
         uvloop.install()
 
-    bot.run()
+    bot.run(
+        status=hikari.Status.DO_NOT_DISTURB,
+        activity=hikari.Activity(
+            name="Made in Plata o Plomo 😎", type=hikari.ActivityType.LISTENING
+        ),
+    )
