@@ -8,7 +8,7 @@ from .. import checks
 
 
 plugin = lightbulb.Plugin("music_plugin")
-
+plugin.add_checks(lightbulb.guild_only, checks.author_in_vc)
 
 lavalink = lavaplayer.LavalinkClient(
     host=os.environ["LAVALINK_SERVER"],
@@ -28,7 +28,7 @@ async def track_end_event(event: lavaplayer.TrackEndEvent) -> None:
     node = await lavalink.get_guild_node(event.guild_id)
     if len(node.queue) == 0:
         await plugin.bot.update_voice_state(node.guild_id, None)
-        
+
 
 @lavalink.listen(lavaplayer.WebSocketClosedEvent)
 async def web_socket_closed_event(event: lavaplayer.WebSocketClosedEvent) -> None:
@@ -58,7 +58,7 @@ async def voice_server_update(event: hikari.VoiceServerUpdateEvent) -> None:
     await lavalink.raw_voice_server_update(event.guild_id, event.endpoint, event.token)
 
 
-async def _join(ctx: lightbulb.context.Context) -> None:
+async def _join(ctx: lightbulb.Context) -> None:
     voice_state = plugin.bot.cache.get_voice_state(ctx.guild_id, ctx.author.id)
     channel_id = voice_state.channel_id
     await ctx.bot.update_voice_state(ctx.guild_id, channel_id, self_deaf=True)
@@ -66,20 +66,25 @@ async def _join(ctx: lightbulb.context.Context) -> None:
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
+@lightbulb.command(name="info", description="lavalink server info")
+@lightbulb.implements(lightbulb.commands.SlashCommand)
+async def info_command(ctx: lightbulb.Context) -> None:
+    await ctx.respond(lavalink.info)
+
+
+@plugin.command()
 @lightbulb.command(name="join", description="join voice channel")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def join_command(ctx: lightbulb.context.Context) -> None:
+async def join_command(ctx: lightbulb.Context) -> None:
     await _join(ctx)
     await ctx.respond("BUENASS 😎")
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.option(name="query", description="query to search", required=True)
 @lightbulb.command(name="play", description="Play command", aliases=["p"])
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def play_command(ctx: lightbulb.context.Context) -> None:
+async def play_command(ctx: lightbulb.Context) -> None:
     query = ctx.options.query
     result = await lavalink.auto_search_tracks(query)
     if not result:
@@ -104,77 +109,69 @@ async def play_command(ctx: lightbulb.context.Context) -> None:
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="stop", description="Stop command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def stop_command(ctx: lightbulb.context.Context) -> None:
+async def stop_command(ctx: lightbulb.Context) -> None:
     await lavalink.stop(ctx.guild_id)
     await ctx.respond("BUENO PARA YA ME CALLO")
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="skip", description="Skip command", aliases=["s"])
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def skip_command(ctx: lightbulb.context.Context) -> None:
+async def skip_command(ctx: lightbulb.Context) -> None:
     await lavalink.skip(ctx.guild_id)
     await ctx.respond("SKIPEAMOS NAZI 😎👊")
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="pause", description="Pause command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def pause_command(ctx: lightbulb.context.Context) -> None:
+async def pause_command(ctx: lightbulb.Context) -> None:
     await lavalink.pause(ctx.guild_id, True)
     await ctx.respond("Ponemos pausa chavalesss")
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="resume", description="Resume command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def resume_command(ctx: lightbulb.context.Context) -> None:
+async def resume_command(ctx: lightbulb.Context) -> None:
     await lavalink.pause(ctx.guild_id, False)
     await ctx.respond("Sacamos la pausa chavaless")
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.option(name="position", description="Position to seek", required=True)
 @lightbulb.command(name="seek", description="Seek command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def seek_command(ctx: lightbulb.context.Context) -> None:
+async def seek_command(ctx: lightbulb.Context) -> None:
     position = ctx.options.position
     await lavalink.seek(ctx.guild_id, position)
     await ctx.respond(f"Adelantamos a la mejor parte 👉 ``{position}``")
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
-@lightbulb.option(name="vol", description="Volume to set", required=True)
+@lightbulb.option(name="vol", description="Volume to set", required=True, type=int)
 @lightbulb.command(name="volume", description="Volume command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def volume_command(ctx: lightbulb.context.Context) -> None:
+async def volume_command(ctx: lightbulb.Context) -> None:
     volume = ctx.options.vol
     await lavalink.volume(ctx.guild_id, volume)
     await ctx.respond(f"Cambiamos el volumen a ``{volume}%`` chavaless")
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="destroy", description="Destroy command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def destroy_command(ctx: lightbulb.context.Context) -> None:
+async def destroy_command(ctx: lightbulb.Context) -> None:
     await lavalink.destroy(ctx.guild_id)
     await ctx.respond("Se reinició todo")
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="queue", description="Queue command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def queue_command(ctx: lightbulb.context.Context) -> None:
+async def queue_command(ctx: lightbulb.Context) -> None:
     node = await lavalink.get_guild_node(ctx.guild_id)
     embed = hikari.Embed(
         description="\n".join(
@@ -185,10 +182,9 @@ async def queue_command(ctx: lightbulb.context.Context) -> None:
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="np", description="Now playing command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def np_command(ctx: lightbulb.context.Context) -> None:
+async def np_command(ctx: lightbulb.Context) -> None:
     node = await lavalink.get_guild_node(ctx.guild_id)
     if not node or not node.queue:
         await ctx.respond("Sos tonto o k")
@@ -197,10 +193,9 @@ async def np_command(ctx: lightbulb.context.Context) -> None:
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="repeat", description="Repeat command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def repeat_command(ctx: lightbulb.context.Context) -> None:
+async def repeat_command(ctx: lightbulb.Context) -> None:
     node = await lavalink.get_guild_node(ctx.guild_id)
     stats = False if node.repeat else True
     await lavalink.repeat(ctx.guild_id, stats)
@@ -211,21 +206,44 @@ async def repeat_command(ctx: lightbulb.context.Context) -> None:
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="shuffle", description="Shuffle command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def shuffle_command(ctx: lightbulb.context.Context) -> None:
+async def shuffle_command(ctx: lightbulb.Context) -> None:
     await lavalink.shuffle(ctx.guild_id)
     await ctx.respond("Listorti 🤙")
 
 
 @plugin.command()
-@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="leave", description="Leave command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def leave_command(ctx: lightbulb.context.Context) -> None:
+async def leave_command(ctx: lightbulb.Context) -> None:
     await ctx.bot.update_voice_state(ctx.guild_id, None)
     await ctx.respond("HASTA LA PROXIMAA")
+
+
+@plugin.command()
+@lightbulb.command(name="filter", description="Filter command")
+@lightbulb.implements(lightbulb.SlashCommandGroup)
+async def filter_command(ctx: lightbulb.Context) -> None:
+    ...
+
+
+@filter_command.child()
+@lightbulb.option(name="hz", description="Filter hz", type=float, required=True)
+@lightbulb.command(name="rotation", description="Rotation subcommand")
+@lightbulb.implements(lightbulb.SlashSubCommand)
+async def rotation_subcommand(ctx: lightbulb.Context) -> None:
+    node = await lavalink.get_guild_node(ctx.guild_id)
+
+    if not node:
+        await ctx.respond("Sos tonto o k")
+        return
+
+    filters = lavaplayer.Filters()  # volume = 1
+    filters.rotation(ctx.options.hz)
+
+    await lavalink.filters(ctx.guild_id, filters)
+    await ctx.respond("Enjoy 😎💪")
 
 
 def load(bot: lightbulb.BotApp) -> None:
