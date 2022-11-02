@@ -1,0 +1,27 @@
+name: purgador-v2 deploy
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Create env file
+        run: |
+          touch .env
+          echo TOKEN=${{ secrets.TOKEN }} >> .env
+          echo LAVALINK_SERVER=${{ secrets.LAVALINK_SERVER }} >> .env
+          echo LAVALINK_PORT=${{ secrets.LAVALINK_PORT }} >> .env
+          echo LAVALINK_PASSWORD=${{ secrets.LAVALINK_PASSWORD }} >> .env
+          cat .env
+      - name: Stop current containers
+        run: make down
+      - name: Build new images
+        run: make build
+      - name: Start new containers
+        run: make up
