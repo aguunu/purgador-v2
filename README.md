@@ -1,25 +1,24 @@
-# discord bot using hikari and lightbulb
-To run the bot use the following command in your terminal.
+# 🖤 Purgador-v2
+Purgador-v2 is a discord bot made with love using hikari-lightbulb command handler.  
+You can invite the bot to your own server [here](https://discord.com/api/oauth2/authorize?client_id=917111121750671370&permissions=8&scope=bot). 
+
+## Docker usage
+Build or rebuild `purgador` and `lavalink` services.
 ```shell
-$ python -m purgador
+$ make build
 ```
 
-To create the database you must run the following command in your terminal.
+Create and starts (in the background) `purgador` and `lavalink` containers.
 ```shell
-$ sqlite3 database.db < tools/queries.sql
+$ make up
 ```
 
-Build purgador docker command.
+Stop and remove `purgador`, `lavalink` containers and network. 
 ```shell
-$ docker build --tag purgador-docker purgador
+$ make down
 ```
 
-Build lavalink docker command
+Remove unused data and all unused images.
 ```shell
-$ docker build --tag lavalink-docker lavalink
-```
-
-Run docker-compose command.
-```shell
-$ docker-compose up -d
+$ make clean
 ```
