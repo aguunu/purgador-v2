@@ -2,6 +2,8 @@ version: "3"
 services:
   lavalink:
     image: lavalink-docker
+    env_file:
+      - .env
     restart: always
     networks:
       discord_net:

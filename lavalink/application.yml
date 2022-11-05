@@ -1,12 +1,12 @@
 server: # REST and WS server
-  port: 2333
-  address: 0.0.0.0
+  port: ${LAVALINK_PORT}
+  address: 0.0.0.0 # localhost
 spring:
   main:
     banner-mode: log
 lavalink:
   server:
-    password: "youshallnotpass"
+    password: "${LAVALINK_PASSWORD}"
     sources:
       youtube: true
       bandcamp: true
