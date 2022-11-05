@@ -19,12 +19,12 @@ lavalink = lavaplayer.LavalinkClient(
 
 @lavalink.listen(lavaplayer.TrackStartEvent)
 async def track_start_event(event: lavaplayer.TrackStartEvent) -> None:
-    logging.info(f"start track: {event.track.title}")
+    logging.info(f"{event.track.title} started at {event.guild_id}")
 
 
 @lavalink.listen(lavaplayer.TrackEndEvent)
 async def track_end_event(event: lavaplayer.TrackEndEvent) -> None:
-    logging.info(f"track end: {event.track.title}")
+    logging.info(f"{event.track.title} ended at {event.guild_id} reason {event.reason}")
     node = await lavalink.get_guild_node(event.guild_id)
     if len(node.queue) == 0:
         await plugin.bot.update_voice_state(node.guild_id, None)
