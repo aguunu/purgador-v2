@@ -19,9 +19,6 @@ jobs:
           echo LAVALINK_PORT=${{ secrets.LAVALINK_PORT }} >> .env
           echo LAVALINK_PASSWORD=${{ secrets.LAVALINK_PASSWORD }} >> .env
           cat .env
-      - name: Stop current containers
-        run: make down
-      - name: Build new images
-        run: make build
-      - name: Start new containers
+  
+      - name: Create and starts lavalink & purgador containers.
         run: make up

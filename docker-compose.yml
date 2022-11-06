@@ -1,28 +1,32 @@
 version: "3"
 services:
   lavalink:
-    image: lavalink-docker
+    build:
+      context: ./lavalink
+      dockerfile: Dockerfile
     env_file:
       - .env
     restart: always
     networks:
-      discord_net:
+      ds_net:
         aliases:
           - lavalink-server
 
   purgador:
-    image: purgador-docker
+    build:
+      context: ./purgador
+      dockerfile: Dockerfile
     env_file:
       - .env
     depends_on:
       - lavalink
     restart: always
     networks:
-      discord_net:
+      ds_net:
         aliases:
           - purgador-server
 
 networks:
-  discord_net:
+  ds_net:
     ipam:
       driver: default
