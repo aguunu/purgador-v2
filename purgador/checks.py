@@ -10,4 +10,4 @@ def _author_in_vc(context: lightbulb.Context) -> bool:
 
 
 author_in_vc = lightbulb.Check(_author_in_vc)
-"""Prevents a command from being used if the user is not in a voice channel."""
+"""Prevents a command from being used if the user is not in a voice channel of the context guild."""

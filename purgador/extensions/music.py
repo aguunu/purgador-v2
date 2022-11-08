@@ -8,7 +8,6 @@ from .. import checks
 
 
 plugin = lightbulb.Plugin("music_plugin")
-plugin.add_checks(lightbulb.guild_only, checks.author_in_vc)
 
 lavalink = lavaplayer.LavalinkClient(
     host=os.environ["LAVALINK_SERVER"],
@@ -27,7 +26,7 @@ async def track_end_event(event: lavaplayer.TrackEndEvent) -> None:
     logging.info(f"{event.track.title} ended at {event.guild_id} reason {event.reason}")
     node = await lavalink.get_guild_node(event.guild_id)
     if len(node.queue) == 0:
-        await plugin.bot.update_voice_state(node.guild_id, None)
+        await plugin.bot.update_voice_state(event.guild_id, None)
 
 
 @lavalink.listen(lavaplayer.WebSocketClosedEvent)
@@ -66,14 +65,26 @@ async def _join(ctx: lightbulb.Context) -> None:
 
 
 @plugin.command()
-@lightbulb.command(name="info", description="lavalink server info")
+@lightbulb.add_checks(lightbulb.owner_only)
+@lightbulb.command(name="info", description="Lavalink server info")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def info_command(ctx: lightbulb.Context) -> None:
-    await ctx.respond(lavalink.info)
+    # TODO: Pretty response
+    await ctx.respond(f"{lavalink.info} \n {lavalink.num_shards=} \n {lavalink.nodes}")
 
 
 @plugin.command()
-@lightbulb.command(name="join", description="join voice channel")
+@lightbulb.add_checks(lightbulb.owner_only)
+@lightbulb.option(name="id", description="guild id", required=True, type=int)
+@lightbulb.command(name="destroy", description="Destroy node command")
+@lightbulb.implements(lightbulb.commands.SlashCommand)
+async def destroy_command(ctx: lightbulb.Context) -> None:
+    await lavalink.destroy(ctx.options.id)
+
+
+@plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
+@lightbulb.command(name="join", description="Join command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def join_command(ctx: lightbulb.Context) -> None:
     await _join(ctx)
@@ -81,6 +92,7 @@ async def join_command(ctx: lightbulb.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.option(name="query", description="query to search", required=True)
 @lightbulb.command(name="play", description="Play command", aliases=["p"])
 @lightbulb.implements(lightbulb.commands.SlashCommand)
@@ -109,6 +121,7 @@ async def play_command(ctx: lightbulb.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="stop", description="Stop command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def stop_command(ctx: lightbulb.Context) -> None:
@@ -117,6 +130,7 @@ async def stop_command(ctx: lightbulb.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="skip", description="Skip command", aliases=["s"])
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def skip_command(ctx: lightbulb.Context) -> None:
@@ -125,6 +139,7 @@ async def skip_command(ctx: lightbulb.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="pause", description="Pause command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def pause_command(ctx: lightbulb.Context) -> None:
@@ -133,6 +148,7 @@ async def pause_command(ctx: lightbulb.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="resume", description="Resume command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def resume_command(ctx: lightbulb.Context) -> None:
@@ -141,34 +157,36 @@ async def resume_command(ctx: lightbulb.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.option(name="position", description="Position to seek", required=True)
 @lightbulb.command(name="seek", description="Seek command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def seek_command(ctx: lightbulb.Context) -> None:
     position = ctx.options.position
     await lavalink.seek(ctx.guild_id, position)
-    await ctx.respond(f"Adelantamos a la mejor parte 👉 ``{position}``")
+    await ctx.respond(f"Adelantamos a la mejor parte 👉 `{position}`")
 
 
 @plugin.command()
-@lightbulb.option(name="vol", description="Volume to set", required=True, type=int)
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
+@lightbulb.option(
+    name="vol",
+    description="Volume to set",
+    required=True,
+    type=int,
+    min_value=0,
+    max_value=1000,
+)
 @lightbulb.command(name="volume", description="Volume command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def volume_command(ctx: lightbulb.Context) -> None:
     volume = ctx.options.vol
     await lavalink.volume(ctx.guild_id, volume)
-    await ctx.respond(f"Cambiamos el volumen a ``{volume}%`` chavaless")
+    await ctx.respond(f"Cambiamos el volumen a `{volume}%` chavaless")
 
 
 @plugin.command()
-@lightbulb.command(name="destroy", description="Destroy command")
-@lightbulb.implements(lightbulb.commands.SlashCommand)
-async def destroy_command(ctx: lightbulb.Context) -> None:
-    await lavalink.destroy(ctx.guild_id)
-    await ctx.respond("Se reinició todo")
-
-
-@plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="queue", description="Queue command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def queue_command(ctx: lightbulb.Context) -> None:
@@ -182,6 +200,7 @@ async def queue_command(ctx: lightbulb.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="np", description="Now playing command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def np_command(ctx: lightbulb.Context) -> None:
@@ -193,6 +212,7 @@ async def np_command(ctx: lightbulb.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="repeat", description="Repeat command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def repeat_command(ctx: lightbulb.Context) -> None:
@@ -206,6 +226,7 @@ async def repeat_command(ctx: lightbulb.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="shuffle", description="Shuffle command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def shuffle_command(ctx: lightbulb.Context) -> None:
@@ -214,6 +235,7 @@ async def shuffle_command(ctx: lightbulb.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only)
 @lightbulb.command(name="leave", description="Leave command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def leave_command(ctx: lightbulb.Context) -> None:
@@ -222,6 +244,7 @@ async def leave_command(ctx: lightbulb.Context) -> None:
 
 
 @plugin.command()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.command(name="filter", description="Filter command")
 @lightbulb.implements(lightbulb.SlashCommandGroup)
 async def filter_command(ctx: lightbulb.Context) -> None:
@@ -229,16 +252,11 @@ async def filter_command(ctx: lightbulb.Context) -> None:
 
 
 @filter_command.child()
+@lightbulb.add_checks(lightbulb.guild_only, checks.author_in_vc)
 @lightbulb.option(name="hz", description="Filter hz", type=float, required=True)
 @lightbulb.command(name="rotation", description="Rotation subcommand")
 @lightbulb.implements(lightbulb.SlashSubCommand)
 async def rotation_subcommand(ctx: lightbulb.Context) -> None:
-    node = await lavalink.get_guild_node(ctx.guild_id)
-
-    if not node:
-        await ctx.respond("Sos tonto o k")
-        return
-
     filters = lavaplayer.Filters()  # volume = 1
     filters.rotation(ctx.options.hz)
 
