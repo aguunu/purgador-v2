@@ -5,7 +5,7 @@ plugin.add_checks(lightbulb.owner_only)
 
 
 @plugin.command()
-@lightbulb.command(name="guilds_info", description="get guilds info")
+@lightbulb.command(name="guilds_info", description="Get guilds info command")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def guilds_info_command(ctx: lightbulb.Context) -> None:
     guilds = ctx.bot.cache.get_guilds_view()

@@ -10,4 +10,4 @@ RUN wget https://github.com/freyacodes/Lavalink/releases/latest/download/Lavalin
 
 EXPOSE ${LAVALINK_PORT}
 
-CMD ["java", "-jar", "Lavalink.jar"]
+ENTRYPOINT ["java", "-Xmx512M", "-jar", "Lavalink.jar"]

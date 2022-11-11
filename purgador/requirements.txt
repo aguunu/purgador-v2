@@ -1,5 +1,5 @@
 hikari
 hikari-lightbulb
-uvloop
+uvloop; sys_platform != 'win32'
 python-dotenv
 lavaplayer

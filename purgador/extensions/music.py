@@ -5,6 +5,7 @@ import logging
 import os
 import asyncio
 from .. import checks
+from ..utils import from_bytes, timestamp
 
 
 plugin = lightbulb.Plugin("music_plugin")
@@ -17,12 +18,12 @@ lavalink = lavaplayer.LavalinkClient(
 
 
 @lavalink.listen(lavaplayer.TrackStartEvent)
-async def track_start_event(event: lavaplayer.TrackStartEvent) -> None:
+async def on_track_start(event: lavaplayer.TrackStartEvent) -> None:
     logging.info(f"{event.track.title} started at {event.guild_id}")
 
 
 @lavalink.listen(lavaplayer.TrackEndEvent)
-async def track_end_event(event: lavaplayer.TrackEndEvent) -> None:
+async def on_track_end(event: lavaplayer.TrackEndEvent) -> None:
     logging.info(f"{event.track.title} ended at {event.guild_id} reason {event.reason}")
     node = await lavalink.get_guild_node(event.guild_id)
     if len(node.queue) == 0:
@@ -30,7 +31,7 @@ async def track_end_event(event: lavaplayer.TrackEndEvent) -> None:
 
 
 @lavalink.listen(lavaplayer.WebSocketClosedEvent)
-async def web_socket_closed_event(event: lavaplayer.WebSocketClosedEvent) -> None:
+async def on_web_socket_closed(event: lavaplayer.WebSocketClosedEvent) -> None:
     logging.error(f"error with websocket {event.reason}")
 
 
@@ -66,11 +67,19 @@ async def _join(ctx: lightbulb.Context) -> None:
 
 @plugin.command()
 @lightbulb.add_checks(lightbulb.owner_only)
-@lightbulb.command(name="info", description="Lavalink server info")
+@lightbulb.command(name="lavalink", description="Lavalink server info")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
-async def info_command(ctx: lightbulb.Context) -> None:
-    # TODO: Pretty response
-    await ctx.respond(f"{lavalink.info} \n {lavalink.num_shards=} \n {lavalink.nodes}")
+async def lavalink_info_command(ctx: lightbulb.Context) -> None:
+    embed = hikari.Embed(title="Lavalink Server Status", color=0xf000ff)
+    embed.add_field("Lavalink Shards", lavalink.num_shards)
+    embed.add_field("Playing Players", lavalink.info.playing_players)
+    embed.add_field("Players",lavalink.info.players)
+    embed.add_field("Memory Used", from_bytes(lavalink.info.memory_used))
+    embed.add_field("Free Memory", from_bytes(lavalink.info.memory_free))
+    embed.add_field("Total Memory", from_bytes(lavalink.info.memory_free + lavalink.info.memory_used))
+    embed.add_field("Uptime `UTC`", timestamp(lavalink.info.uptime / 1000))
+
+    await ctx.respond(embed)
 
 
 @plugin.command()
