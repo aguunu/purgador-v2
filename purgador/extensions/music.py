@@ -5,8 +5,9 @@ import logging
 import os
 import asyncio
 from .. import checks
-from ..utils import from_bytes, timestamp
-
+from ..discord_utils import timestamp, Timestamp
+from ..utils import from_bytes
+from datetime import datetime
 
 plugin = lightbulb.Plugin("music_plugin")
 
@@ -70,14 +71,24 @@ async def _join(ctx: lightbulb.Context) -> None:
 @lightbulb.command(name="lavalink", description="Lavalink server info")
 @lightbulb.implements(lightbulb.commands.SlashCommand)
 async def lavalink_info_command(ctx: lightbulb.Context) -> None:
-    embed = hikari.Embed(title="Lavalink Server Status", color=0xf000ff)
+    embed = hikari.Embed(title="Lavalink Server Status", color=0xF000FF)
     embed.add_field("Lavalink Shards", lavalink.num_shards)
-    embed.add_field("Playing Players", lavalink.info.playing_players)
-    embed.add_field("Players",lavalink.info.players)
-    embed.add_field("Memory Used", from_bytes(lavalink.info.memory_used))
-    embed.add_field("Free Memory", from_bytes(lavalink.info.memory_free))
-    embed.add_field("Total Memory", from_bytes(lavalink.info.memory_free + lavalink.info.memory_used))
-    embed.add_field("Uptime `UTC`", timestamp(lavalink.info.uptime / 1000))
+
+    stats = lavalink.info
+    # players stats
+    embed.add_field("Playing Players", stats.playing_players)
+    embed.add_field("Players", stats.players)
+
+    # memory stats
+    embed.add_field("Memory Used", from_bytes(stats.memory_used))
+    embed.add_field("Free Memory", from_bytes(stats.memory_free))
+    embed.add_field("Total Memory", from_bytes(stats.memory_free + stats.memory_used))
+
+    # uptime stats
+    elapsed = stats.uptime / 1000  # seconds
+    current_time = datetime.utcnow().timestamp()
+    started_at = current_time - elapsed
+    embed.add_field("Uptime `UTC`", timestamp(started_at, Timestamp.RELATIVE_TIME))
 
     await ctx.respond(embed)
 
